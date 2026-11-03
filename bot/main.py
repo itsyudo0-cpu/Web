@@ -63,3 +63,40 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logger.info("Bot stopped cleanly.")
+
+
+import os
+import asyncio
+from aiohttp import web
+from pyrogram import Client
+
+# Dummy route taaki Render ko 200 OK mile
+async def handle_ping(request):
+    return web.Response(text="Bot is running!")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    app.router.add_get("/health", handle_ping)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    # Render PORT environment variable provide karta hai (default 8080/10000)
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server started on port {port}")
+
+# Bot start hone ke sath server ko run karein
+async def main():
+    # Pehle web server start karein taaki port open ho jaye
+    await start_web_server()
+    
+    # Uske baad bot start karein
+    await bot.start()
+    print("Bot started successfully!")
+    await asyncio.Event().wait()  # Keeps bot running
+
+if __name__ == "__main__":
+    asyncio.run(main())
